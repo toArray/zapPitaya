@@ -95,10 +95,14 @@ func (z *ZapLog) WithField(key string, value interface{}) interfaces.Logger {
 			return z
 		}
 
+		uid := pitaya.GetSessionFromCtx(ctx).UID()
 		route := pitaya.GetFromPropagateCtx(ctx, constants.RouteKey)
 		service := pitaya.GetFromPropagateCtx(ctx, constants.PeerServiceKey)
 		requestID := pitaya.GetFromPropagateCtx(ctx, constants.RequestIDKey)
-		logger := z.logger.With(zap.Any("route", route), zap.Any("service", service), zap.Any("requestID", requestID))
+		logger := z.logger.With(zap.Any("route", route),
+			zap.Any("service", service),
+			zap.Any("requestID", requestID),
+			zap.Any("uid", uid))
 		return &ZapLog{
 			logger: logger,
 		}
