@@ -88,6 +88,7 @@ func (z *ZapLog) WithFields(fields map[string]interface{}) interfaces.Logger {
 	return z
 }
 func (z *ZapLog) WithField(key string, value interface{}) interfaces.Logger {
+
 	if key == CTX {
 		ctx, ok := value.(context.Context)
 		if !ok {
