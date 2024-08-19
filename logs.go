@@ -14,6 +14,9 @@ import (
 const ZapCtx = "zap-ctx"                             // 特殊上下文标识
 const ZapCustomSessionData = "zap-customSessionData" // 自定义session数据
 
+// CustomSessionData 自定义数据格式
+type CustomSessionData map[string]any
+
 // GetPitayaLogger 获得pitaya的logger
 // 这里只实现pitaya接口
 func GetPitayaLogger(zap *zap.Logger) interfaces.Logger {
@@ -172,7 +175,7 @@ func (z *ZapLog) getFieldsList(ctx context.Context) (fieldsList []zap.Field) {
 		return
 	}
 
-	res, ok := data.(map[string]any)
+	res, ok := data.(CustomSessionData)
 	if !ok {
 		return
 	}
