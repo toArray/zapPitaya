@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/topfreegames/pitaya/v2"
+	"github.com/topfreegames/pitaya/v2/constants"
 	"github.com/topfreegames/pitaya/v2/logger/interfaces"
 	"go.uber.org/zap"
 )
@@ -168,22 +169,27 @@ func (z *ZapLog) GetInternalLogger() any {
 }
 
 // getFieldsList 获得日志列
-func (z *ZapLog) getFieldsList(ctx context.Context) []zap.Field {
+func (z *ZapLog) getFieldsList(ctx context.Context) (fieldsList []zap.Field) {
+
+	fieldsList = make([]zap.Field, 0)
+	fieldsList = append(fieldsList, zap.Any(constants.PeerIDKey, pitaya.GetFromPropagateCtx(ctx, constants.PeerIDKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.RouteKey, pitaya.GetFromPropagateCtx(ctx, constants.RouteKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.PeerServiceKey, pitaya.GetFromPropagateCtx(ctx, constants.PeerServiceKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.RequestIDKey, pitaya.GetFromPropagateCtx(ctx, constants.RequestIDKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.StartTimeKey, pitaya.GetFromPropagateCtx(ctx, constants.StartTimeKey)))
 
 	// 获取数据
 	data := pitaya.GetFromPropagateCtx(ctx, ZapCustomSessionData)
 	if data == nil {
-		return nil
+		return
 	}
 
 	res, ok := data.(*CustomSessionData)
 	if !ok {
-		return nil
+		return
 	}
 
 	// 自定义字段
-	fieldsList := make([]zap.Field, 0)
 	fieldsList = append(fieldsList, zap.Any(ZapCustomSessionData, res))
-
-	return fieldsList
+	return
 }
