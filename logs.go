@@ -9,10 +9,17 @@ import (
 	"go.uber.org/zap"
 )
 
-// CTX 定义用户区分数据的管理
+// Ctx 定义用户区分数据的管理
 // 如果key是zapCtx则在WithField和WithFields时取出pitaya的上下文数据并提取
-const CTX = "zapCtx"
-const SESSION_UID = "session_uid"
+const Ctx = "zap-Ctx"                       // 特殊上下文标识
+const Uuid = "zap-Uuid"                     // 用户UUID
+const UserIP = "zap-UserIP"                 // 用户IP
+const SessionUid = "zap-SessionUid"         // 用户ID
+const RegionID = "zap-RegionID"             // 区服ID
+const PackageID = "zap-PackageID"           // 包体ID
+const ResVersion = "zap-ResVersion"         // 热更版本
+const PackageVersion = "zap-PackageVersion" // 包体版本
+const GameNodeID = "zap-GameNodeID"         // 游戏节点ID
 
 // GetPitayaLogger 获得pitaya的logger
 // 这里只实现pitaya接口
@@ -81,9 +88,11 @@ func (z *ZapLog) Infoln(args ...interface{}) {
 func (z *ZapLog) Warn(args ...interface{}) {
 	z.logger.Sugar().Warn(args)
 }
+
 func (z *ZapLog) Warnf(format string, args ...interface{}) {
 	z.logger.Sugar().Warnf(fmt.Sprintf(format, args...))
 }
+
 func (z *ZapLog) Warnln(args ...interface{}) {
 	z.logger.Sugar().Warnln(args)
 }
@@ -91,9 +100,11 @@ func (z *ZapLog) Warnln(args ...interface{}) {
 func (z *ZapLog) Panic(args ...interface{}) {
 	z.logger.Sugar().Panic(args)
 }
+
 func (z *ZapLog) Panicf(format string, args ...interface{}) {
 	z.logger.Sugar().Panicf(fmt.Sprintf(format, args...))
 }
+
 func (z *ZapLog) Panicln(args ...interface{}) {
 	z.logger.Sugar().Panicln(args)
 }
@@ -103,33 +114,14 @@ func (z *ZapLog) Panicln(args ...interface{}) {
 func (z *ZapLog) WithFields(fields map[string]interface{}) interfaces.Logger {
 	fieldsList := make([]zap.Field, 0, len(fields))
 	for k, v := range fields {
-		if k == CTX {
+		if k == Ctx {
 			ctx, ok := v.(context.Context)
 			if !ok {
 				continue
 			}
 
-			// ready
-			peerIDKey := pitaya.GetFromPropagateCtx(ctx, constants.PeerIDKey)
-			routeKey := pitaya.GetFromPropagateCtx(ctx, constants.RouteKey)
-			peerServiceKey := pitaya.GetFromPropagateCtx(ctx, constants.PeerServiceKey)
-			requestIDKey := pitaya.GetFromPropagateCtx(ctx, constants.RequestIDKey)
-			startTimeKey := pitaya.GetFromPropagateCtx(ctx, constants.StartTimeKey)
-
-			// append
-			fieldsList = append(fieldsList, zap.Any(constants.PeerIDKey, peerIDKey))
-			fieldsList = append(fieldsList, zap.Any(constants.RouteKey, routeKey))
-			fieldsList = append(fieldsList, zap.Any(constants.PeerServiceKey, peerServiceKey))
-			fieldsList = append(fieldsList, zap.Any(constants.RequestIDKey, requestIDKey))
-			fieldsList = append(fieldsList, zap.Any(constants.StartTimeKey, startTimeKey))
-
-			// uid
-			session := pitaya.GetSessionFromCtx(ctx)
-			if session != nil {
-				fieldsList = append(fieldsList, zap.Any(SESSION_UID, session.UID()))
-			} else {
-				fieldsList = append(fieldsList, zap.Any(SESSION_UID, pitaya.GetFromPropagateCtx(ctx, SESSION_UID)))
-			}
+			// 获得所有需要记录的自定义日志列
+			fieldsList = z.getFieldsList(ctx)
 		} else {
 			fieldsList = append(fieldsList, zap.Any(k, v))
 		}
@@ -144,35 +136,14 @@ func (z *ZapLog) WithFields(fields map[string]interface{}) interfaces.Logger {
 func (z *ZapLog) WithField(key string, value interface{}) interfaces.Logger {
 
 	newZap := &ZapLog{}
-	if key == CTX {
+	if key == Ctx {
 		ctx, ok := value.(context.Context)
 		if !ok {
 			return z
 		}
-
-		// 上下文内数据
-		peerIDKey := pitaya.GetFromPropagateCtx(ctx, constants.PeerIDKey)
-		routeKey := pitaya.GetFromPropagateCtx(ctx, constants.RouteKey)
-		peerServiceKey := pitaya.GetFromPropagateCtx(ctx, constants.PeerServiceKey)
-		requestIDKey := pitaya.GetFromPropagateCtx(ctx, constants.RequestIDKey)
-		startTimeKey := pitaya.GetFromPropagateCtx(ctx, constants.StartTimeKey)
-		logger := z.logger.With(
-			zap.Any(constants.PeerIDKey, peerIDKey),
-			zap.Any(constants.RouteKey, routeKey),
-			zap.Any(constants.PeerServiceKey, peerServiceKey),
-			zap.Any(constants.RequestIDKey, requestIDKey),
-			zap.Any(constants.StartTimeKey, startTimeKey),
-		)
-
-		// uid
-		session := pitaya.GetSessionFromCtx(ctx)
-		if session != nil {
-			logger = logger.With(zap.Any(SESSION_UID, session.UID()))
-		} else {
-			logger = logger.With(zap.Any(SESSION_UID, pitaya.GetFromPropagateCtx(ctx, SESSION_UID)))
-		}
-
-		newZap.logger = logger
+		// 获得所有需要记录的自定义日志列
+		fieldsList := z.getFieldsList(ctx)
+		newZap.logger = z.logger.With(fieldsList...)
 	} else {
 		newZap.logger = z.logger.With(zap.Any(key, value))
 	}
@@ -186,4 +157,37 @@ func (z *ZapLog) WithError(err error) interfaces.Logger {
 
 func (z *ZapLog) GetInternalLogger() any {
 	return z.logger
+}
+
+// getFieldsList 获得日志列
+func (z *ZapLog) getFieldsList(ctx context.Context) []zap.Field {
+
+	// 自定义字段
+	fieldsList := make([]zap.Field, 0)
+	fieldsList = append(fieldsList, zap.Any(Uuid, pitaya.GetFromPropagateCtx(ctx, Uuid)))
+	fieldsList = append(fieldsList, zap.Any(UserIP, pitaya.GetFromPropagateCtx(ctx, UserIP)))
+	fieldsList = append(fieldsList, zap.Any(RegionID, pitaya.GetFromPropagateCtx(ctx, RegionID)))
+	fieldsList = append(fieldsList, zap.Any(PackageID, pitaya.GetFromPropagateCtx(ctx, PackageID)))
+	fieldsList = append(fieldsList, zap.Any(ResVersion, pitaya.GetFromPropagateCtx(ctx, ResVersion)))
+	fieldsList = append(fieldsList, zap.Any(PackageVersion, pitaya.GetFromPropagateCtx(ctx, PackageVersion)))
+	fieldsList = append(fieldsList, zap.Any(GameNodeID, pitaya.GetFromPropagateCtx(ctx, GameNodeID)))
+
+	// 框架内字段
+	fieldsList = append(fieldsList, zap.Any(constants.PeerIDKey, pitaya.GetFromPropagateCtx(ctx, constants.PeerIDKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.RouteKey, pitaya.GetFromPropagateCtx(ctx, constants.RouteKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.PeerServiceKey, pitaya.GetFromPropagateCtx(ctx, constants.PeerServiceKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.RequestIDKey, pitaya.GetFromPropagateCtx(ctx, constants.RequestIDKey)))
+	fieldsList = append(fieldsList, zap.Any(constants.StartTimeKey, pitaya.GetFromPropagateCtx(ctx, constants.StartTimeKey)))
+
+	// uid
+	session := pitaya.GetSessionFromCtx(ctx)
+	if session != nil {
+		// 从session获取
+		fieldsList = append(fieldsList, zap.Any(SessionUid, session.UID()))
+	} else {
+		// 从上下文获取（rpc请求不会有session数据,这id由各服务自己绑定到上下文中）
+		fieldsList = append(fieldsList, zap.Any(SessionUid, pitaya.GetFromPropagateCtx(ctx, SessionUid)))
+	}
+
+	return fieldsList
 }
