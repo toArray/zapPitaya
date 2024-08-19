@@ -53,11 +53,11 @@ func TestWithFile(t *testing.T) {
 	m := make(map[string]interface{})
 	m["test"] = "test"
 	m["num"] = 100
-
+	
 	log := GetPitayaLogger(logger)
 	log = log.WithField("test", "test")
 	log = log.WithError(fmt.Errorf("test err"))
-	log = log.WithField(CTX, context.TODO())
+	log = log.WithField(ZapCtx, context.TODO())
 	log = log.WithField("err", fmt.Errorf("test err2"))
 	log.Error("this is Info")
 	log.Errorf("this is Infof, %s, %d, %+v", "string", 1000, m)
