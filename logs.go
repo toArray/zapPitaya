@@ -33,9 +33,11 @@ type ZapLog struct {
 func (z *ZapLog) Fatal(format ...interface{}) {
 	z.logger.Sugar().Fatal(format)
 }
+
 func (z *ZapLog) Fatalf(format string, args ...interface{}) {
-	z.logger.Sugar().Fatal(fmt.Sprintf(format, args...))
+	z.logger.Sugar().Fatalf(fmt.Sprintf(format, args...))
 }
+
 func (z *ZapLog) Fatalln(args ...interface{}) {
 	z.logger.Sugar().Fatalln(args)
 }
@@ -43,9 +45,11 @@ func (z *ZapLog) Fatalln(args ...interface{}) {
 func (z *ZapLog) Debug(args ...interface{}) {
 	z.logger.Sugar().Debug(args)
 }
+
 func (z *ZapLog) Debugf(format string, args ...interface{}) {
 	z.logger.Sugar().Debugf(fmt.Sprintf(format, args...))
 }
+
 func (z *ZapLog) Debugln(args ...interface{}) {
 	z.logger.Sugar().Debugln(args)
 }
@@ -53,9 +57,11 @@ func (z *ZapLog) Debugln(args ...interface{}) {
 func (z *ZapLog) Error(args ...interface{}) {
 	z.logger.Sugar().Error(args)
 }
+
 func (z *ZapLog) Errorf(format string, args ...interface{}) {
 	z.logger.Sugar().Errorf(fmt.Sprintf(format, args...))
 }
+
 func (z *ZapLog) Errorln(args ...interface{}) {
 	z.logger.Sugar().Errorln(args)
 }
@@ -63,9 +69,11 @@ func (z *ZapLog) Errorln(args ...interface{}) {
 func (z *ZapLog) Info(args ...interface{}) {
 	z.logger.Sugar().Info(args)
 }
+
 func (z *ZapLog) Infof(format string, args ...interface{}) {
 	z.logger.Sugar().Infof(fmt.Sprintf(format, args...))
 }
+
 func (z *ZapLog) Infoln(args ...interface{}) {
 	z.logger.Sugar().Infoln(args)
 }
@@ -120,7 +128,7 @@ func (z *ZapLog) WithFields(fields map[string]interface{}) interfaces.Logger {
 			if session != nil {
 				fieldsList = append(fieldsList, zap.Any(SESSION_UID, session.UID()))
 			} else {
-				fieldsList = append(fieldsList, zap.Any(SESSION_UID, nil))
+				fieldsList = append(fieldsList, zap.Any(SESSION_UID, pitaya.GetFromPropagateCtx(ctx, SESSION_UID)))
 			}
 		} else {
 			fieldsList = append(fieldsList, zap.Any(k, v))
@@ -161,7 +169,7 @@ func (z *ZapLog) WithField(key string, value interface{}) interfaces.Logger {
 		if session != nil {
 			logger = logger.With(zap.Any(SESSION_UID, session.UID()))
 		} else {
-			logger = logger.With(zap.Any(SESSION_UID, nil))
+			logger = logger.With(zap.Any(SESSION_UID, pitaya.GetFromPropagateCtx(ctx, SESSION_UID)))
 		}
 
 		newZap.logger = logger
