@@ -14,18 +14,6 @@ import (
 const ZapCtx = "zap-ctx"                             // 特殊上下文标识
 const ZapCustomSessionData = "zap-customSessionData" // 自定义session数据
 
-// CustomSessionData 自定义session数据
-type CustomSessionData struct {
-	Uuid           string `json:"uuid"`            // 用户UUID
-	UserIP         string `json:"user_ip"`         // 用户IP
-	SessionUid     string `json:"session_uid"`     // 用户ID
-	RegionID       string `json:"region_id"`       // 区服ID
-	PackageID      string `json:"package_id"`      // 包体ID
-	ResVersion     string `json:"res_version"`     // 热更版本
-	PackageVersion string `json:"package_version"` // 包体版本
-	GameNodeID     string `json:"game_node_id"`    // 游戏节点ID
-}
-
 // GetPitayaLogger 获得pitaya的logger
 // 这里只实现pitaya接口
 func GetPitayaLogger(zap *zap.Logger) interfaces.Logger {
@@ -184,7 +172,7 @@ func (z *ZapLog) getFieldsList(ctx context.Context) (fieldsList []zap.Field) {
 		return
 	}
 
-	res, ok := data.(*CustomSessionData)
+	res, ok := data.(map[string]any)
 	if !ok {
 		return
 	}
