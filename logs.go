@@ -11,8 +11,7 @@ import (
 
 // ZapCtx 定义用户区分数据的管理
 // 如果key是zapCtx则在WithField和WithFields时取出pitaya的上下文数据并提取
-const ZapCtx = "zap-ctx"                             // 特殊上下文标识
-const ZapCustomSessionData = "zap-customSessionData" // 自定义session数据
+const ZapCtx = "zap-ctx" // 特殊上下文标识
 
 // CustomSessionData 自定义数据格式
 type CustomSessionData map[string]any

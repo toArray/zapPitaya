@@ -1,5 +1,7 @@
 package zapPitaya
 
+const ZapCustomSessionData = "zap-customSessionData" // 自定义session数据
+
 // 自定义到session的数据
 const (
 	Uuid           = "uuid"           // 用户UUID
