@@ -1,10 +1,12 @@
-module git.sakuragame.net/packages/zapPitaya
+module github.com/toArray/zapPitaya
 
 go 1.22.5
 
 require (
+	github.com/spf13/viper v1.15.0
 	github.com/topfreegames/pitaya/v2 v2.11.2
 	go.uber.org/zap v1.27.0
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
 
 require (
@@ -45,7 +47,6 @@ require (
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.15.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/topfreegames/go-workers v1.2.1 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.11 // indirect
